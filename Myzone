@@ -1,0 +1,19 @@
+myzone-app
+│
+├── frontend
+│   ├── index.html
+│   ├── dashboard.html
+│   ├── vault.html
+│   ├── admin.html
+│   ├── css
+│   └── js
+│
+├── backend
+│   ├── server.js
+│   ├── routes
+│   ├── database
+│   ├── middleware
+│   └── telegram
+│
+├── package.json
+└── README.md
