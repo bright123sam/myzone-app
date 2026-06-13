@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Myzone - Ludo Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .ludo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .room-display {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .room-code {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+
+        .room-status {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        .players-display {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .players-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .player-item {
+            flex: 1;
+            min-width: 80px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .player-item.active {
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        .player-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            margin: 0 auto 5px;
+        }
+
+        .game-board {
+            width: 100%;
+            max-width: 300px;
+            aspect-ratio: 1;
+            background: linear-gradient(45deg, #FFD700 0%, #FFA500 50%, #FF6347 100%);
+            border: 3px solid var(--primary-color);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .game-board.active {
+            display: block;
+        }
+
+        .dice-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .dice-display {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            font-size: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .join-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input {
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 14px;
+        }
+
+        .input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .waiting-spinner {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(76, 175, 80, 0.3);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .game-message {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <button class="back-btn" id="backBtn">←</button>
+            <h1>Ludo</h1>
+            <div style="width: 40px;"></div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="ludo-container">
+                <!-- Join/Create Room Section -->
+                <div id="joinSection" class="join-section">
+                    <h3>Join or Create Game</h3>
+                    <input type="text" id="roomCodeInput" placeholder="Enter room code" class="input" maxlength="6">
+                    <button class="btn-primary" id="joinRoomBtn">Join Room</button>
+                    <button class="btn-secondary" id="createRoomBtn">Create Room</button>
+                </div>
+
+                <!-- Room Display -->
+                <div id="roomDisplay" class="room-display" style="display: none;">
+                    <p class="room-status">Room Code</p>
+                    <div class="room-code" id="roomCode">XXXX</div>
+                    <p class="room-status" id="roomStatusText">Waiting for players...</p>
+                </div>
+
+                <!-- Players Display -->
+                <div id="playersDisplay" class="players-display" style="display: none;">
+                    <p style="margin-top: 0; font-size: 12px; opacity: 0.7;">Players in Room</p>
+                    <div class="players-list" id="playersList"></div>
+                </div>
+
+                <!-- Waiting Section -->
+                <div id="waitingSection" class="waiting-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Waiting for players...</p>
+                    <p style="font-size: 12px; opacity: 0.7;">Minimum 2 players to start</p>
+                </div>
+
+                <!-- Game Board -->
+                <div class="game-board" id="gameBoard"></div>
+
+                <!-- Dice Section -->
+                <div id="diceSection" class="dice-section" style="display: none;">
+                    <p>Roll Dice</p>
+                    <div class="dice-display" id="diceDisplay">🎲</div>
+                    <button class="btn-primary" id="rollDiceBtn">Roll Dice</button>
+                </div>
+
+                <!-- Game Message -->
+                <div id="gameMessage" class="game-message" style="display: none;"></div>
+
+                <!-- Action Buttons -->
+                <div id="actionButtons" class="action-buttons" style="display: none;">
+                    <button class="btn-secondary" id="leaveRoomBtn">Leave Game</button>
+                </div>
+
+                <!-- Start Game Button -->
+                <button id="startGameBtn" class="btn-primary" style="display: none; width: 100%; margin-top: 20px;">Start Game</button>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item" data-page="dashboard">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </button>
+            <button class="nav-item" data-page="vault">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 5V3a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2"></path>
+                </svg>
+            </button>
+            <button class="nav-item active" data-page="games">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <line x1="6" y1="9" x2="6" y2="20"></line>
+                    <line x1="10" y1="9" x2="10" y2="20"></line>
+                    <line x1="14" y1="9" x2="14" y2="20"></line>
+                    <line x1="18" y1="9" x2="18" y2="20"></line>
+                    <path d="M4 9h16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2Z"></path>
+                </svg>
+            </button>
+            <button class="nav-item" data-page="profile">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="js/telegram.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        class LudoGame {
+            constructor() {
+                this.currentUser = null;
+                this.roomCode = null;
+                this.players = [];
+                this.gameStarted = false;
+                this.setupEventListeners();
+                this.loadUser();
+            }
+
+            async loadUser() {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    const res = await fetch('/api/users/me', {
+                        headers: {'Authorization': `Bearer ${token}`}
+                    });
+                    if (res.ok) {
+                        this.currentUser = await res.json();
+                    }
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('createRoomBtn').addEventListener('click', () => this.createRoom());
+                document.getElementById('joinRoomBtn').addEventListener('click', () => this.joinRoom());
+                document.getElementById('startGameBtn').addEventListener('click', () => this.startGame());
+                document.getElementById('rollDiceBtn').addEventListener('click', () => this.rollDice());
+                document.getElementById('leaveRoomBtn').addEventListener('click', () => this.leaveRoom());
+                document.getElementById('backBtn').addEventListener('click', () => window.history.back());
+            }
+
+            async createRoom() {
+                const res = await fetch('/api/games/ludo/room', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({})
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    this.roomCode = data.roomCode;
+                    this.players = [data.creator];
+                    this.showRoomView();
+                }
+            }
+
+            async joinRoom() {
+                const roomCode = document.getElementById('roomCodeInput').value;
+                if (!roomCode) {
+                    alert('Please enter a room code');
+                    return;
+                }
+
+                const res = await fetch('/api/games/ludo/room/join', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({roomCode})
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    this.roomCode = data.roomCode;
+                    this.players = data.players;
+                    this.showRoomView();
+                } else {
+                    alert('Room not found or is full');
+                }
+            }
+
+            showRoomView() {
+                document.getElementById('joinSection').style.display = 'none';
+                document.getElementById('roomDisplay').style.display = 'block';
+                document.getElementById('playersDisplay').style.display = 'block';
+                document.getElementById('waitingSection').style.display = 'block';
+                document.getElementById('actionButtons').style.display = 'flex';
+
+                document.getElementById('roomCode').textContent = this.roomCode;
+                this.updatePlayersList();
+
+                if (this.players.length >= 2) {
+                    document.getElementById('startGameBtn').style.display = 'block';
+                }
+            }
+
+            updatePlayersList() {
+                const playersList = document.getElementById('playersList');
+                playersList.innerHTML = this.players.map(p => `
+                    <div class="player-item ${p.id === this.currentUser?.id ? 'active' : ''}">
+                        <div class="player-avatar"></div>
+                        <div>${p.username}</div>
+                    </div>
+                `).join('');
+            }
+
+            async startGame() {
+                if (this.players.length < 2) {
+                    alert('Need at least 2 players');
+                    return;
+                }
+
+                this.gameStarted = true;
+                document.getElementById('startGameBtn').style.display = 'none';
+                document.getElementById('waitingSection').style.display = 'none';
+                document.getElementById('gameBoard').classList.add('active');
+                document.getElementById('diceSection').style.display = 'block';
+                document.getElementById('gameMessage').style.display = 'block';
+                document.getElementById('gameMessage').textContent = 'Game started! ' + this.players[0].username + ' goes first';
+            }
+
+            rollDice() {
+                const diceValue = Math.floor(Math.random() * 6) + 1;
+                document.getElementById('diceDisplay').textContent = diceValue;
+
+                setTimeout(() => {
+                    document.getElementById('gameMessage').textContent = `Dice rolled: ${diceValue}`;
+                }, 500);
+            }
+
+            leaveRoom() {
+                if (confirm('Leave this game?')) {
+                    fetch('/api/games/ludo/room/leave', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+                    window.history.back();
+                }
+            }
+        }
+
+        const game = new LudoGame();
+    </script>
+</body>
+</html>
