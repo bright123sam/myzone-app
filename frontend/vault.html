@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Myzone - Vault</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <button class="back-btn" id="backBtn">←</button>
+            <h1>Vault</h1>
+            <div style="width: 40px;"></div>
+        </header>
+
+        <!-- PIN Lock Screen -->
+        <div id="pinScreen" class="pin-screen active">
+            <div class="pin-container">
+                <h2>Unlock Vault</h2>
+                <p>Enter your 4-digit PIN</p>
+                <div class="pin-display">
+                    <div class="pin-dot" id="dot1"></div>
+                    <div class="pin-dot" id="dot2"></div>
+                    <div class="pin-dot" id="dot3"></div>
+                    <div class="pin-dot" id="dot4"></div>
+                </div>
+                <div class="pin-pad">
+                    <button class="pin-btn" data-num="1">1</button>
+                    <button class="pin-btn" data-num="2">2</button>
+                    <button class="pin-btn" data-num="3">3</button>
+                    <button class="pin-btn" data-num="4">4</button>
+                    <button class="pin-btn" data-num="5">5</button>
+                    <button class="pin-btn" data-num="6">6</button>
+                    <button class="pin-btn" data-num="7">7</button>
+                    <button class="pin-btn" data-num="8">8</button>
+                    <button class="pin-btn" data-num="9">9</button>
+                    <button class="pin-btn" data-num="0">0</button>
+                    <button class="pin-btn delete-btn" id="deleteBtn">⌫</button>
+                </div>
+                <p class="pin-error" id="pinError"></p>
+                <button class="btn-secondary" id="setPinBtn">Set PIN</button>
+            </div>
+        </div>
+
+        <!-- Main Vault Content -->
+        <main class="main-content" id="vaultContent" style="display: none;">
+            <!-- Storage Info -->
+            <section class="storage-info">
+                <div class="storage-bar">
+                    <div class="storage-progress" id="storageProgress"></div>
+                </div>
+                <p id="storageText">0 MB / 3000 MB</p>
+            </section>
+
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <label class="upload-btn">
+                    <input type="file" id="fileInput" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip" style="display: none;">
+                    <span>+ Upload Files</span>
+                </label>
+                <button class="btn-secondary" id="createFolderBtn">📁 New Folder</button>
+            </section>
+
+            <!-- Search -->
+            <section class="search-section">
+                <input type="text" id="searchInput" placeholder="Search files..." class="search-input">
+            </section>
+
+            <!-- Files List -->
+            <section class="files-section">
+                <div id="filesList" class="files-list">
+                    <p class="empty-state">No files yet</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item" data-page="dashboard">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </button>
+            <button class="nav-item active" data-page="vault">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 5V3a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2"></path>
+                </svg>
+            </button>
+            <button class="nav-item" data-page="games">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <line x1="6" y1="9" x2="6" y2="20"></line>
+                    <line x1="10" y1="9" x2="10" y2="20"></line>
+                    <line x1="14" y1="9" x2="14" y2="20"></line>
+                    <line x1="18" y1="9" x2="18" y2="20"></line>
+                    <path d="M4 9h16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2Z"></path>
+                </svg>
+            </button>
+            <button class="nav-item" data-page="profile">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="js/telegram.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/vault.js"></script>
+</body>
+</html>
