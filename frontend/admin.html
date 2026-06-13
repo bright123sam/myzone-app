@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Myzone - Admin Panel</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-header {
+            padding: 20px;
+            background: rgba(255,0,0,0.1);
+            border-bottom: 2px solid rgba(255,0,0,0.3);
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 10px 15px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-color);
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .user-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .user-meta {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .icon-btn {
+            padding: 8px 12px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--primary-color);
+        }
+
+        .icon-btn.danger {
+            background: rgba(244, 67, 54, 0.3);
+        }
+
+        .icon-btn.danger:hover {
+            background: rgba(244, 67, 54, 0.7);
+        }
+
+        .file-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .file-name {
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .broadcast-form {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .storage-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .storage-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .storage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #FFD700);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header admin-header">
+            <button class="back-btn" id="backBtn">←</button>
+            <h1>⚙️ Admin Panel</h1>
+            <div style="width: 40px;"></div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Tabs -->
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="users">Users</button>
+                <button class="tab-btn" data-tab="files">Files</button>
+                <button class="tab-btn" data-tab="storage">Storage</button>
+                <button class="tab-btn" data-tab="broadcast">Broadcast</button>
+                <button class="tab-btn" data-tab="stats">Stats</button>
+            </div>
+
+            <!-- Users Tab -->
+            <section id="users" class="admin-section active">
+                <h3>User Management</h3>
+                <div id="usersList" class="users-list">
+                    <p class="empty-state">Loading users...</p>
+                </div>
+            </section>
+
+            <!-- Files Tab -->
+            <section id="files" class="admin-section">
+                <h3>File Management</h3>
+                <div id="filesList" class="files-list">
+                    <p class="empty-state">Loading files...</p>
+                </div>
+            </section>
+
+            <!-- Storage Tab -->
+            <section id="storage" class="admin-section">
+                <h3>Storage Usage</h3>
+                <div id="storageList" class="storage-list">
+                    <p class="empty-state">Loading storage data...</p>
+                </div>
+            </section>
+
+            <!-- Broadcast Tab -->
+            <section id="broadcast" class="admin-section">
+                <h3>Send Broadcast Message</h3>
+                <form id="broadcastForm" class="broadcast-form">
+                    <div class="form-group">
+                        <label>Message Title</label>
+                        <input type="text" id="msgTitle" placeholder="Enter title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message Content</label>
+                        <textarea id="msgContent" placeholder="Enter message" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Users</label>
+                        <select id="targetUsers" class="form-group" style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.05); color: white; width: 100%;">
+                            <option value="all">All Users</option>
+                            <option value="active">Active Users Only</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">Send Message</button>
+                </form>
+            </section>
+
+            <!-- Stats Tab -->
+            <section id="stats" class="admin-section">
+                <h3>System Statistics</h3>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCoins">0</div>
+                        <div class="stat-label">Total Coins Distributed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalFiles">0</div>
+                        <div class="stat-label">Total Files</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalStorage">0GB</div>
+                        <div class="stat-label">Total Storage Used</div>
+                    </div>
+                </div>
+                <h3>Recent Activity</h3>
+                <div id="recentActivity" class="activity-list">
+                    <p class="empty-state">Loading activity...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="js/telegram.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
