@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Myzone - Snake Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            height: 100%;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .info-box {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .info-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        #gameCanvas {
+            border: 2px solid var(--primary-color);
+            background: #000;
+            max-width: 100%;
+            display: block;
+            margin: 20px auto;
+            border-radius: 10px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            max-width: 200px;
+            margin: 20px 0;
+        }
+
+        .control-btn {
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .game-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .game-state {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .game-over-modal {
+            text-align: center;
+        }
+
+        .game-over-modal h2 {
+            margin-top: 0;
+        }
+
+        .final-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 20px 0;
+        }
+
+        .reward-info {
+            padding: 15px;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 480px) {
+            #gameCanvas {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <button class="back-btn" id="backBtn">←</button>
+            <h1>Snake</h1>
+            <div style="width: 40px;"></div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="game-container">
+                <!-- Game Info -->
+                <div class="game-info">
+                    <div class="info-box">
+                        <div class="info-label">Score</div>
+                        <div class="info-value" id="score">0</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">High Score</div>
+                        <div class="info-value" id="highScore">0</div>
+                    </div>
+                </div>
+
+                <!-- Game Canvas -->
+                <canvas id="gameCanvas" width="300" height="300"></canvas>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <div></div>
+                    <button class="control-btn" id="upBtn">↑</button>
+                    <div></div>
+                    <button class="control-btn" id="leftBtn">←</button>
+                    <button class="control-btn" id="downBtn">↓</button>
+                    <button class="control-btn" id="rightBtn">→</button>
+                </div>
+
+                <!-- Game State -->
+                <div class="game-state">
+                    <button class="btn-primary" id="startBtn">Start Game</button>
+                    <button class="btn-secondary" id="pauseBtn" style="display: none;">Pause</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item" data-page="dashboard">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </button>
+            <button class="nav-item" data-page="vault">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 5V3a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2"></path>
+                </svg>
+            </button>
+            <button class="nav-item active" data-page="games">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <line x1="6" y1="9" x2="6" y2="20"></line>
+                    <line x1="10" y1="9" x2="10" y2="20"></line>
+                    <line x1="14" y1="9" x2="14" y2="20"></line>
+                    <line x1="18" y1="9" x2="18" y2="20"></line>
+                    <path d="M4 9h16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2Z"></path>
+                </svg>
+            </button>
+            <button class="nav-item" data-page="profile">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="js/telegram.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        class SnakeGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gridSize = 10;
+                this.reset();
+                this.setupControls();
+                this.loadHighScore();
+            }
+
+            reset() {
+                this.snake = [{x: 150, y: 150}];
+                this.food = this.randomFood();
+                this.direction = {x: this.gridSize, y: 0};
+                this.nextDirection = {x: this.gridSize, y: 0};
+                this.score = 0;
+                this.gameRunning = false;
+                this.gamePaused = false;
+                this.gameOver = false;
+            }
+
+            randomFood() {
+                return {
+                    x: Math.floor(Math.random() * (this.canvas.width / this.gridSize)) * this.gridSize,
+                    y: Math.floor(Math.random() * (this.canvas.height / this.gridSize)) * this.gridSize
+                };
+            }
+
+            start() {
+                if (this.gameOver) this.reset();
+                this.gameRunning = true;
+                this.gamePaused = false;
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('pauseBtn').style.display = 'inline-block';
+                this.gameLoop();
+            }
+
+            pause() {
+                this.gamePaused = !this.gamePaused;
+                document.getElementById('pauseBtn').textContent = this.gamePaused ? 'Resume' : 'Pause';
+            }
+
+            stop() {
+                this.gameRunning = false;
+                this.gameOver = true;
+                document.getElementById('pauseBtn').style.display = 'none';
+                document.getElementById('startBtn').style.display = 'inline-block';
+                document.getElementById('startBtn').textContent = 'Play Again';
+                this.showGameOverModal();
+            }
+
+            update() {
+                if (!this.gameRunning || this.gamePaused) return;
+
+                this.direction = this.nextDirection;
+                const head = {x: this.snake[0].x + this.direction.x, y: this.snake[0].y + this.direction.y};
+
+                if (head.x < 0 || head.x >= this.canvas.width || head.y < 0 || head.y >= this.canvas.height) {
+                    this.stop();
+                    return;
+                }
+
+                for (let segment of this.snake) {
+                    if (head.x === segment.x && head.y === segment.y) {
+                        this.stop();
+                        return;
+                    }
+                }
+
+                this.snake.unshift(head);
+
+                if (head.x === this.food.x && head.y === this.food.y) {
+                    this.score += 10;
+                    document.getElementById('score').textContent = this.score;
+                    this.food = this.randomFood();
+                } else {
+                    this.snake.pop();
+                }
+            }
+
+            draw() {
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.ctx.fillStyle = '#4CAF50';
+                for (let segment of this.snake) {
+                    this.ctx.fillRect(segment.x + 1, segment.y + 1, this.gridSize - 2, this.gridSize - 2);
+                }
+
+                this.ctx.fillStyle = '#FF5722';
+                this.ctx.fillRect(this.food.x + 2, this.food.y + 2, this.gridSize - 4, this.gridSize - 4);
+            }
+
+            gameLoop() {
+                this.update();
+                this.draw();
+                if (this.gameRunning) {
+                    setTimeout(() => this.gameLoop(), 100);
+                }
+            }
+
+            setupControls() {
+                document.getElementById('upBtn').addEventListener('click', () => {
+                    if (this.direction.y === 0) this.nextDirection = {x: 0, y: -this.gridSize};
+                });
+                document.getElementById('downBtn').addEventListener('click', () => {
+                    if (this.direction.y === 0) this.nextDirection = {x: 0, y: this.gridSize};
+                });
+                document.getElementById('leftBtn').addEventListener('click', () => {
+                    if (this.direction.x === 0) this.nextDirection = {x: -this.gridSize, y: 0};
+                });
+                document.getElementById('rightBtn').addEventListener('click', () => {
+                    if (this.direction.x === 0) this.nextDirection = {x: this.gridSize, y: 0};
+                });
+
+                document.getElementById('startBtn').addEventListener('click', () => this.start());
+                document.getElementById('pauseBtn').addEventListener('click', () => this.pause());
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowUp' && this.direction.y === 0) this.nextDirection = {x: 0, y: -this.gridSize};
+                    if (e.key === 'ArrowDown' && this.direction.y === 0) this.nextDirection = {x: 0, y: this.gridSize};
+                    if (e.key === 'ArrowLeft' && this.direction.x === 0) this.nextDirection = {x: -this.gridSize, y: 0};
+                    if (e.key === 'ArrowRight' && this.direction.x === 0) this.nextDirection = {x: this.gridSize, y: 0};
+                });
+            }
+
+            loadHighScore() {
+                const highScore = localStorage.getItem('snakeHighScore') || 0;
+                document.getElementById('highScore').textContent = highScore;
+                this.highScore = parseInt(highScore);
+            }
+
+            saveHighScore() {
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('snakeHighScore', this.score);
+                    document.getElementById('highScore').textContent = this.score;
+                }
+            }
+
+            showGameOverModal() {
+                this.saveHighScore();
+                const modal = document.getElementById('modal');
+                const modalBody = document.getElementById('modalBody');
+                const reward = this.score > 50 ? 100 : 0;
+                
+                modalBody.innerHTML = `
+                    <div class="game-over-modal">
+                        <h2>Game Over!</h2>
+                        <div class="final-score">${this.score}</div>
+                        <div class="reward-info">
+                            <p>Coins Earned: <strong>+${reward}</strong></p>
+                        </div>
+                        <button class="btn-primary" onclick="location.reload()">Play Again</button>
+                        <button class="btn-secondary" onclick="window.history.back()">Back to Games</button>
+                    </div>
+                `;
+                modal.style.display = 'flex';
+
+                if (reward > 0) {
+                    fetch('/api/games/reward', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({game: 'snake', score: this.score, coins: reward})
+                    });
+                }
+            }
+        }
+
+        const game = new SnakeGame();
+
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.history.back();
+        });
+    </script>
+</body>
+</html>
